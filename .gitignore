@@ -1,0 +1,19 @@
+# Node modules 
+node_modules/
+
+# Local environment config
+.env
+
+# Firebase private key
+config/firebaseServiceAccount.json
+
+# System files 
+.DS_Store
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Coverage or test reports 
+coverage/
