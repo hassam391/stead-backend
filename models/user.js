@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema({
    frequency: { type: Number, default: 0 },
    goal: { type: String, default: null },
    activity: { type: String, default: null },
+   calorieGoal: { type: Number, default: null },
 });
 
 module.exports = mongoose.model("User", UserSchema);

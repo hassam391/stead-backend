@@ -41,7 +41,7 @@ router.get("/info", firebaseAuth, async (req, res) => {
 
 //saves user journey and frequency to database
 router.post("/journey", firebaseAuth, async (req, res) => {
-   const { journey, frequency, goal, activity } = req.body;
+   const { journey, frequency, goal, activity, calorieGoal } = req.body;
    const email = req.user.email;
 
    try {
@@ -58,9 +58,13 @@ router.post("/journey", firebaseAuth, async (req, res) => {
       //optional fields if they're needed
       if (goal) user.goal = goal;
       if (activity) user.activity = activity;
+      if (calorieGoal) user.calorieGoal = calorieGoal;
 
       //saves updated user data
       await user.save();
+
+      //testing and validation
+      console.log("received from frontend:", req.body);
 
       res.json({ message: "journey saved successfully" });
    } catch (err) {
