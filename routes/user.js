@@ -32,8 +32,15 @@ router.get("/info", firebaseAuth, async (req, res) => {
          return res.status(404).json({ message: "user not found" });
       }
 
-      //sends back the user's journey and frequency
-      res.json({ journey: user.journey, frequency: user.frequency });
+      //sends back all relevant info needed for the dashboard
+      es.json({
+         email: user.email,
+         journey: user.journey,
+         frequency: user.frequency,
+         goal: user.goal,
+         activity: user.activity,
+         calorieGoal: user.calorieGoal,
+      });
    } catch (err) {
       res.status(500).json({ message: "server error" });
    }
@@ -43,6 +50,9 @@ router.get("/info", firebaseAuth, async (req, res) => {
 router.post("/journey", firebaseAuth, async (req, res) => {
    const { journey, frequency, goal, activity, calorieGoal } = req.body;
    const email = req.user.email;
+
+   //logs payload received by backend
+   console.log("received journey data:", req.body);
 
    try {
       //finds user by email, creates new one if doesn't exist
@@ -55,10 +65,19 @@ router.post("/journey", firebaseAuth, async (req, res) => {
       user.journey = journey;
       user.frequency = frequency;
 
-      //optional fields if they're needed
-      if (goal) user.goal = goal;
-      if (activity) user.activity = activity;
-      if (calorieGoal) user.calorieGoal = calorieGoal;
+      //resets all journey-related fields to avoid nulls
+      user.journey = journey;
+      user.frequency = frequency;
+      user.goal = null;
+      user.activity = null;
+      user.calorieGoal = null;
+
+      //assigns values only if they exist
+      if (typeof goal !== "undefined") user.goal = goal;
+      if (typeof activity !== "undefined") user.activity = activity;
+      if (typeof calorieGoal !== "undefined" && !isNaN(calorieGoal)) {
+         user.calorieGoal = calorieGoal;
+      }
 
       //saves updated user data
       await user.save();

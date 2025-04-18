@@ -12,8 +12,16 @@ const userRoutes = require("./routes/user");
 //initializes the express app
 const app = express();
 
+//allows testing with local live server
+app.use(
+   cors({
+      origin: "http://127.0.0.1:5500",
+      methods: ["GET", "POST"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+   })
+);
+
 //uses middleware to handle cross-origin requests and parse incoming json
-app.use(cors());
 app.use(express.json());
 
 //registers all user-related routes
