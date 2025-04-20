@@ -1,12 +1,18 @@
 const express = require("express");
 const Log = require("../models/log");
+const User = require("../models/user");
 const authMiddleware = require("../middleware/firebaseAuth");
 
 const router = express.Router();
 
+//testing and debugging code
+router.get("/test", (req, res) => {
+   res.send("log route works!");
+});
+
 router.post("/", authMiddleware, async (req, res) => {
    const { journeyType, data } = req.body;
-   const userId = req.user.uid;
+   const email = req.user.email;
 
    const today = new Date().toISOString().split("T")[0];
 
@@ -40,4 +46,4 @@ router.post("/", authMiddleware, async (req, res) => {
    }
 });
 
-export default router;
+module.exports = router;

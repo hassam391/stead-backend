@@ -33,6 +33,11 @@ app.use(express.json());
 //registers all user-related routes
 app.use("/api/user", userRoutes);
 
+const logRoutes = require("./routes/log");
+
+//registers all log-related routes
+app.use("/api/log", logRoutes);
+
 //sets the port from env or defaults to 5000 if not already
 const PORT = process.env.PORT || 5000;
 
