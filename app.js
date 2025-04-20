@@ -15,7 +15,13 @@ const app = express();
 //allows testing with local live server
 app.use(
    cors({
-      origin: "http://127.0.0.1:5500",
+      origin: [
+         //local live server
+         "http://127.0.0.1:5500",
+
+         //deployed frontend
+         "https://stead-app.netlify.app",
+      ],
       methods: ["GET", "POST"],
       allowedHeaders: ["Content-Type", "Authorization"],
    })

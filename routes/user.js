@@ -25,23 +25,31 @@ router.get("/protected", firebaseAuth, async (req, res) => {
 //gets user journey info to decide page redirection
 router.get("/info", firebaseAuth, async (req, res) => {
    try {
-      //finds the user by email in the database
-      const user = await User.findOne({ email: req.user.email });
+      //email verification for error handling
+      const email = req.user.email;
+
+      if (!email) {
+         console.error("No email found in token:", req.user);
+         return res.status(400).json({ message: "invalid token - email missing" });
+      }
+
+      const user = await User.findOne({ email });
 
       if (!user) {
          return res.status(404).json({ message: "user not found" });
       }
 
       //sends back all relevant info needed for the dashboard
-      es.json({
+      res.json({
          email: user.email,
-         journey: user.journey,
+         journey: user.journey || null,
          frequency: user.frequency,
          goal: user.goal,
          activity: user.activity,
          calorieGoal: user.calorieGoal,
       });
    } catch (err) {
+      console.error("GET /info error:", err);
       res.status(500).json({ message: "server error" });
    }
 });
