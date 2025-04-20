@@ -2,6 +2,7 @@
 const express = require("express");
 const firebaseAuth = require("../middleware/firebaseAuth");
 const User = require("../models/user");
+const Log = require("../models/log");
 
 //creates a new router instance to define node routes separately
 const router = express.Router();
@@ -129,6 +130,32 @@ router.post("/register", firebaseAuth, async (req, res) => {
    } catch (err) {
       console.error("register error:", err);
       res.status(500).json({ message: "server error" });
+   }
+});
+
+//logs daily activity
+router.post("/log", firebaseAuth, async (req, res) => {
+   const { journey, details } = req.body;
+   const email = req.user.email;
+
+   //formats to YYYY-MM-DD
+   const today = new Date().toISOString().split("T")[0];
+
+   try {
+      //checks if log already exists for today
+      const existingLog = await Log.findOne({ email, date: today });
+      if (existingLog) {
+         return res.status(400).json({ message: "already logged today" });
+      }
+
+      //creates and saves new log
+      const newLog = new Log({ email, journey, date: today, details });
+      await newLog.save();
+
+      res.json({ message: "log saved successfully" });
+   } catch (err) {
+      console.error("log saving failed:", err);
+      res.status(500).json({ message: "failed to save log" });
    }
 });
 
