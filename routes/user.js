@@ -43,6 +43,7 @@ router.get("/info", firebaseAuth, async (req, res) => {
       res.json({
          email: user.email,
          journey: user.journey || null,
+         username: user.username,
          frequency: user.frequency,
          goal: user.goal,
          activity: user.activity,
@@ -97,6 +98,37 @@ router.post("/journey", firebaseAuth, async (req, res) => {
    } catch (err) {
       console.error("error saving journey:", err);
       res.status(500).json({ message: "failed to save journey" });
+   }
+});
+
+//username registration
+router.post("/register", firebaseAuth, async (req, res) => {
+   const { email, username } = req.body;
+
+   if (!username || !email) {
+      return res.status(400).json({ message: "Missing required fields" });
+   }
+
+   try {
+      //checks if username already exists
+      const existingUsername = await User.findOne({ username });
+      if (existingUsername) {
+         return res.status(409).json({ message: "Username already taken" });
+      }
+
+      //create or updates user
+      let user = await User.findOne({ email });
+      if (!user) {
+         user = new User({ email, username });
+      } else {
+         user.username = username;
+      }
+
+      await user.save();
+      res.status(200).json({ message: "User registered successfully" });
+   } catch (err) {
+      console.error("register error:", err);
+      res.status(500).json({ message: "server error" });
    }
 });
 
