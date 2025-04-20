@@ -5,11 +5,6 @@ const authMiddleware = require("../middleware/firebaseAuth");
 
 const router = express.Router();
 
-//testing and debugging code
-router.get("/test", (req, res) => {
-   res.send("log route works!");
-});
-
 router.post("/", authMiddleware, async (req, res) => {
    const { journeyType, data } = req.body;
    const email = req.user.email;
@@ -43,6 +38,26 @@ router.post("/", authMiddleware, async (req, res) => {
    } catch (err) {
       console.error("Log error:", err);
       res.status(500).json({ message: "Server error." });
+   }
+});
+
+//checks whether user has lgged for the day or not
+router.get("/check", authMiddleware, async (req, res) => {
+   const email = req.user.email;
+   const today = new Date().toISOString().split("T")[0];
+
+   try {
+      const user = await User.findOne({ email });
+
+      if (!user) {
+         return res.status(404).json({ message: "User not found" });
+      }
+
+      const existingLog = await Log.findOne({ userId: user._id.toString(), date: today });
+      res.json({ loggedToday: !!existingLog });
+   } catch (err) {
+      console.error("Log check error:", err);
+      res.status(500).json({ message: "Server error" });
    }
 });
 
