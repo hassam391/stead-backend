@@ -10,9 +10,6 @@ const UserSchema = new mongoose.Schema({
    goal: { type: String, default: null },
    activity: { type: String, default: null },
    calorieGoal: { type: Number, default: null },
-   currentStreak: { type: Number, default: 0 }, //track the current streak
-   missedDays: { type: [Date], default: [] }, //array to store missed days
-   lastLoggedDate: { type: Date, default: Date.now }, //last day activity logged
 });
 
 module.exports = mongoose.model("User", UserSchema);
