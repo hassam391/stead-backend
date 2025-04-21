@@ -3,6 +3,8 @@ const firebaseAuth = require("../middleware/firebaseAuth");
 const User = require("../models/user");
 const Metric = require("../models/metrics"); // Import the Metrics model
 const router = express.Router();
+const Log = require("../models/log");
+const Metric = require("../models/metrics");
 
 //gets current streak
 router.get("/metrics", firebaseAuth, async (req, res) => {
@@ -43,8 +45,14 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          return res.status(404).json({ message: "User not found" });
       }
 
+      //check for existing metric, make one if it does not exist
+      let metric = await Metric.findOne({ userId: user._id });
+      if (!metric) {
+         metric = new Metric({ userId: user._id });
+      }
+
       //check if user has already logged for the day
-      const existingLog = await Log.findOne({ email, date: today });
+      const existingLog = await Log.findOne({ userId: user._id.toString(), date: today });
 
       if (existingLog) {
          return res.status(400).json({ message: "Already logged today" });
@@ -55,12 +63,12 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
 
       //if user eats less than or just 100 above caloriegoal, increase streak
       if (user.goal === "lose" && caloriesLogged <= user.calorieGoal + 100) {
-         user.currentStreak += 1;
+         metric.streak += 1;
          streakUpdated = true;
 
          //if user eats more than the calorie gaol or just 200 below it, increase streak
       } else if (user.goal === "gain" && caloriesLogged >= user.calorieGoal - 200) {
-         user.currentStreak += 1;
+         metric.streak += 1;
          streakUpdated = true;
 
          //if user eats the calorie goal or just 200 above and below, increase streak
@@ -69,34 +77,36 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          caloriesLogged >= user.calorieGoal - 200 &&
          caloriesLogged <= user.calorieGoal + 200
       ) {
-         user.currentStreak += 1;
+         metric.streak += 1;
          streakUpdated = true;
       }
 
       //penalty logic
       //if streak was not updated, check value of missed day
       if (!streakUpdated) {
-         //checks if today is already recorded as missed
-         if (!user.missedDays.includes(today)) {
-            //counts as missed, if not already missed, if missed
-            user.missedDays.push(today);
-
-            if (user.missedDays.length === 2) {
-               //resets streak after 2 missed days
-               user.currentStreak = 0;
+         const missedAlready = metric.missedDays.find((d) => d === today);
+         if (!missedAlready) {
+            metric.missedDays.push(today);
+            if (metric.missedDays.length === 2) {
+               metric.streak = 0;
             } else {
-               //reduces streak by 1 after 1 missed day
-               user.currentStreak -= 1;
+               metric.streak -= 1;
             }
          }
       }
 
       //update last logged date and save user data
-      user.lastLoggedDate = today;
+      metric.lastLoggedDate = today;
       await user.save();
 
       //creates new log entry
-      const newLog = new Log({ journey: "calorie tracking", date: today, details: req.body.data.details });
+      const newLog = new Log({
+         userId: user._id.toString(),
+         username: user.username,
+         journeyType: "calorie tracking",
+         date: today,
+         data: { caloriesLogged, details },
+      });
       await newLog.save();
 
       res.json({ message: "Log saved successfully", streak: user.currentStreak });
