@@ -167,7 +167,7 @@ router.post("/log", firebaseAuth, async (req, res) => {
    const email = req.user.email;
 
    //formats the date
-   const today = new Date().toDateString().split("T")[0];
+   const today = new Date().toISOString().split("T")[0];
 
    try {
       //looks for user before anything
