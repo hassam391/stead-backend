@@ -186,16 +186,20 @@ router.post("/log", firebaseAuth, async (req, res) => {
       }
 
       //streaks logic (only for calories for now)
-      let streakUpated = false;
+      let streakUpdated = false;
 
       //if user eats less than or just 100 above caloriegoal, increase streak
       if (user.goal === "lose" && caloriesLogged <= user.calorieGoal + 100) {
          user.currentStreak += 1;
          streakUpdated = true;
-      }
 
-      //if user eats the calorie goal or just 200 above and below, increase streak
-      else if (
+         //if user eats more than the calorie gaol or just 200 below it, increase streak
+      } else if (user.goal === "gain" && caloriesLogged >= user.calorieGoal - 200) {
+         user.currentStreak += 1;
+         streakUpdated = true;
+
+         //if user eats the calorie goal or just 200 above and below, increase streak
+      } else if (
          user.goal === "maintain" &&
          caloriesLogged >= user.calorieGoal - 200 &&
          caloriesLogged <= user.calorieGoal + 200
@@ -206,7 +210,7 @@ router.post("/log", firebaseAuth, async (req, res) => {
 
       //penalty logic
       //if streak was not updated, check value of missed day
-      if (!streakUpated) {
+      if (!streakUpdated) {
          //checks if today is already recorded as missed
          if (!user.missedDays.includes(today)) {
             //counts as missed, if not already missed, if missed
