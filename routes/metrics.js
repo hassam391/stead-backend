@@ -1,5 +1,31 @@
+const express = require("express");
+const router = express.Router();
+const firebaseAuth = require("../middleware/firebaseAuth");
+const User = require("../models/user");
+const Metric = require("../models/metrics");
+const Log = require("../models/log");
+
+//get current streak + metrics
+router.get("/metrics", firebaseAuth, async (req, res) => {
+   const email = req.user.email;
+
+   try {
+      const user = await User.findOne({ email });
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      const metrics = await Metric.findOne({ userId: user._id });
+      if (!metrics) return res.status(404).json({ message: "Metrics not found" });
+
+      res.json(metrics); //streak, missedDays, etc.
+   } catch (err) {
+      console.error("Error fetching metrics:", err);
+      res.status(500).json({ message: "Server error" });
+   }
+});
+
+//logs activity and update streak
 router.post("/log-activity", firebaseAuth, async (req, res) => {
-   const { caloriesLogged, details } = req.body.data;
+   const { valueLogged, details } = req.body.data;
    const email = req.user.email;
    const today = new Date().toISOString().split("T")[0];
 
@@ -19,16 +45,16 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
 
       let streakUpdated = false;
 
-      if (user.goal === "lose" && caloriesLogged <= user.calorieGoal + 100) {
+      if (user.goal === "lose" && valueLogged <= user.calorieGoal + 100) {
          metric.streak += 1;
          streakUpdated = true;
-      } else if (user.goal === "gain" && caloriesLogged >= user.calorieGoal - 200) {
+      } else if (user.goal === "gain" && valueLogged >= user.calorieGoal - 200) {
          metric.streak += 1;
          streakUpdated = true;
       } else if (
          user.goal === "maintain" &&
-         caloriesLogged >= user.calorieGoal - 200 &&
-         caloriesLogged <= user.calorieGoal + 200
+         valueLogged >= user.calorieGoal - 200 &&
+         valueLogged <= user.calorieGoal + 200
       ) {
          metric.streak += 1;
          streakUpdated = true;
@@ -64,3 +90,5 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       res.status(500).json({ message: "Failed to save log" });
    }
 });
+
+module.exports = router;
