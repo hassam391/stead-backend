@@ -25,10 +25,23 @@ router.get("/metrics", firebaseAuth, async (req, res) => {
 
 //logs activity and update streak
 router.post("/log-activity", firebaseAuth, async (req, res) => {
+   //validation
+   if (!req.body.data) {
+      console.error("Missing data object in request:", req.body);
+      return res.status(400).json({ message: "Missing data object" });
+   }
+
    const { valueLogged, details } = req.body.data;
 
+   //validation
+   const numericLoggedValue = Number(valueLogged);
+   if (isNaN(numericLoggedValue)) {
+      console.error("Invalid valueLogged:", valueLogged);
+      return res.status(400).json({ message: "Calories must be a number" });
+   }
+
    //esnure value logged is a number
-   const numericLoggedValue = parseInt(valueLogged);
+   numericLoggedValue = parseInt(valueLogged);
    const email = req.user.email;
    const today = new Date().toISOString().split("T")[0];
 

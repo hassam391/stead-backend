@@ -3,6 +3,7 @@ const express = require("express");
 const firebaseAuth = require("../middleware/firebaseAuth");
 const User = require("../models/user");
 const Log = require("../models/log");
+const Metric = require("../models/metrics");
 
 //creates a new router instance to define node routes separately
 const router = express.Router();
@@ -157,6 +158,26 @@ router.post("/log", firebaseAuth, async (req, res) => {
    } catch (err) {
       console.error("log saving failed:", err);
       res.status(500).json({ message: "failed to save log" });
+   }
+});
+
+//creates user metrics upon sign up to avoid initial backend errors
+router.post("/signup", async (req, res) => {
+   try {
+      // 1. Create user (existing code)
+      const user = await User.create({ email: req.body.email });
+
+      // 2. Initialize metrics document
+      await Metric.create({
+         userId: user._id,
+         streak: 0,
+         lastLoggedDate: null,
+         missedDays: [],
+      });
+
+      res.status(201).json({ message: "User created" });
+   } catch (err) {
+      res.status(500).json({ message: "Signup failed" });
    }
 });
 
