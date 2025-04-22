@@ -37,7 +37,7 @@ app.use("/api/log", logRoutes);
 
 //registers all metric-related routes
 const metricsRoutes = require("./routes/metrics");
-app.use("/api/", metricsRoutes);
+app.use("/api", metricsRoutes);
 
 //sets the port from env or defaults to 5000 if not already
 const PORT = process.env.PORT || 5000;
