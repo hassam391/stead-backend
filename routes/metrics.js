@@ -48,6 +48,12 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
 
       let streakUpdated = false;
 
+      //simple debugging code
+      console.log("Goal:", user.goal);
+      console.log("Target:", user.calorieGoal);
+      console.log("Logged:", numericLoggedValue);
+      console.log("Streak before:", metric.streak);
+
       if (user.goal === "lose" && numericLoggedValue <= user.calorieGoal + 100) {
          metric.streak += 1;
          streakUpdated = true;
@@ -62,6 +68,9 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          metric.streak += 1;
          streakUpdated = true;
       }
+
+      //debug code
+      console.log("Streak after:", metric.streak);
 
       if (!streakUpdated) {
          const missedAlready = metric.missedDays.find((d) => new Date(d).toISOString().split("T")[0] === today);
