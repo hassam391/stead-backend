@@ -64,7 +64,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       }
 
       if (!streakUpdated) {
-         const missedAlready = metric.missedDays.find((d) => d === today);
+         const missedAlready = metric.missedDays.find((d) => new Date(d).toISOString().split("T")[0] === today);
          if (!missedAlready) {
             metric.missedDays.push(today);
             if (metric.missedDays.length === 2) {
@@ -84,7 +84,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          username: user.username,
          journeyType: "calorie tracking",
          date: today,
-         data: { numericLoggedValue, details },
+         data: { valueLogged: numericLoggedValue, details },
       });
       await newLog.save();
 
