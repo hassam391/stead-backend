@@ -6,9 +6,6 @@ const cors = require("cors");
 //loads environment variables from .env file
 require("dotenv").config();
 
-//imports the user routes which include endpoints
-const userRoutes = require("./routes/user");
-
 //initializes the express app
 const app = express();
 
@@ -31,17 +28,16 @@ app.use(
 app.use(express.json());
 
 //registers all user-related routes
+const userRoutes = require("./routes/user");
 app.use("/api/user", userRoutes);
 
-const logRoutes = require("./routes/log");
-
 //registers all log-related routes
+const logRoutes = require("./routes/log");
 app.use("/api/log", logRoutes);
 
-const logMetrics = require("./routes/metrics");
-
-//registers all log-related routes
-app.use("/api/metrics", logMetrics);
+//registers all metric-related routes
+const metricsRoutes = require("./routes/metrics");
+app.use("/api/", metricsRoutes);
 
 //sets the port from env or defaults to 5000 if not already
 const PORT = process.env.PORT || 5000;
