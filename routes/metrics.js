@@ -54,14 +54,14 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       console.log("Logged:", numericLoggedValue);
       console.log("Streak before:", metric.streak);
 
-      if (user.goal === "lose" && numericLoggedValue <= user.calorieGoal + 100) {
+      if (user.goal === "lose weight" && numericLoggedValue <= user.calorieGoal + 100) {
          metric.streak += 1;
          streakUpdated = true;
-      } else if (user.goal === "gain" && numericLoggedValue >= user.calorieGoal - 200) {
+      } else if (user.goal === "gain weight" && numericLoggedValue >= user.calorieGoal - 200) {
          metric.streak += 1;
          streakUpdated = true;
       } else if (
-         user.goal === "maintain" &&
+         user.goal === "maintain weight" &&
          numericLoggedValue >= user.calorieGoal - 200 &&
          numericLoggedValue <= user.calorieGoal + 200
       ) {
@@ -74,8 +74,10 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
 
       if (!streakUpdated) {
          const missedAlready = metric.missedDays.find((d) => new Date(d).toISOString().split("T")[0] === today);
+
          if (!missedAlready) {
             metric.missedDays.push(today);
+
             if (metric.missedDays.length === 2) {
                metric.streak = 0;
             } else {
