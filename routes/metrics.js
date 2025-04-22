@@ -4,7 +4,6 @@ const User = require("../models/user");
 const Metric = require("../models/metrics");
 const router = express.Router();
 const Log = require("../models/log");
-const Metric = require("../models/metrics");
 
 //gets current streak
 router.get("/metrics", firebaseAuth, async (req, res) => {
