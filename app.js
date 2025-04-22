@@ -38,6 +38,11 @@ const logRoutes = require("./routes/log");
 //registers all log-related routes
 app.use("/api/log", logRoutes);
 
+const logMetrics = require("./routes/metrics");
+
+//registers all log-related routes
+app.use("/api/metrics", logMetrics);
+
 //sets the port from env or defaults to 5000 if not already
 const PORT = process.env.PORT || 5000;
 

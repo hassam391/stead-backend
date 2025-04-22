@@ -1,7 +1,7 @@
 const express = require("express");
 const firebaseAuth = require("../middleware/firebaseAuth");
 const User = require("../models/user");
-const Metric = require("../models/metrics"); // Import the Metrics model
+const Metric = require("../models/metrics");
 const router = express.Router();
 const Log = require("../models/log");
 const Metric = require("../models/metrics");
@@ -55,6 +55,71 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       const existingLog = await Log.findOne({ userId: user._id.toString(), date: today });
 
       if (existingLog) {
+         router.post("/log-activity", firebaseAuth, async (req, res) => {
+            const { caloriesLogged } = req.body.data;
+            const email = req.user.email;
+            const today = new Date().toISOString().split("T")[0];
+
+            try {
+               const user = await User.findOne({ email });
+               if (!user) return res.status(404).json({ message: "User not found" });
+
+               let metrics = await Metric.findOne({ userId: user._id });
+               if (!metrics) {
+                  metrics = new Metric({ userId: user._id });
+               }
+
+               const existingLog = await Log.findOne({ userId: user._id.toString(), date: today });
+               if (existingLog) return res.status(400).json({ message: "Already logged today" });
+
+               let streakUpdated = false;
+
+               if (user.goal === "lose" && caloriesLogged <= user.calorieGoal + 100) {
+                  metrics.streak += 1;
+                  streakUpdated = true;
+               } else if (user.goal === "gain" && caloriesLogged >= user.calorieGoal - 200) {
+                  metrics.streak += 1;
+                  streakUpdated = true;
+               } else if (
+                  user.goal === "maintain" &&
+                  caloriesLogged >= user.calorieGoal - 200 &&
+                  caloriesLogged <= user.calorieGoal + 200
+               ) {
+                  metrics.streak += 1;
+                  streakUpdated = true;
+               }
+
+               if (!streakUpdated) {
+                  if (!metrics.missedDays.includes(today)) {
+                     metrics.missedDays.push(today);
+                     if (metrics.missedDays.length === 2) {
+                        metrics.streak = 0;
+                     } else {
+                        metrics.streak -= 1;
+                     }
+                  }
+               }
+
+               metrics.lastLoggedDate = today;
+               await metrics.save();
+
+               const newLog = new Log({
+                  userId: user._id.toString(),
+                  username: user.username,
+                  journeyType: "calorie tracking",
+                  date: today,
+                  data: req.body.data,
+               });
+
+               await newLog.save();
+
+               res.json({ message: "Log saved successfully", streak: metrics.streak });
+            } catch (err) {
+               console.error("Log saving failed:", err);
+               res.status(500).json({ message: "Failed to save log" });
+            }
+         });
+
          return res.status(400).json({ message: "Already logged today" });
       }
 
