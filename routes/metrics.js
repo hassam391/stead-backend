@@ -26,6 +26,9 @@ router.get("/metrics", firebaseAuth, async (req, res) => {
 //logs activity and update streak
 router.post("/log-activity", firebaseAuth, async (req, res) => {
    const { valueLogged, details } = req.body.data;
+
+   //esnure value logged is a number
+   const numericLoggedValue = parseInt(valueLogged);
    const email = req.user.email;
    const today = new Date().toISOString().split("T")[0];
 
@@ -45,16 +48,16 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
 
       let streakUpdated = false;
 
-      if (user.goal === "lose" && valueLogged <= user.calorieGoal + 100) {
+      if (user.goal === "lose" && numericLoggedValue <= user.calorieGoal + 100) {
          metric.streak += 1;
          streakUpdated = true;
-      } else if (user.goal === "gain" && valueLogged >= user.calorieGoal - 200) {
+      } else if (user.goal === "gain" && numericLoggedValue >= user.calorieGoal - 200) {
          metric.streak += 1;
          streakUpdated = true;
       } else if (
          user.goal === "maintain" &&
-         valueLogged >= user.calorieGoal - 200 &&
-         valueLogged <= user.calorieGoal + 200
+         numericLoggedValue >= user.calorieGoal - 200 &&
+         numericLoggedValue <= user.calorieGoal + 200
       ) {
          metric.streak += 1;
          streakUpdated = true;
@@ -67,7 +70,8 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
             if (metric.missedDays.length === 2) {
                metric.streak = 0;
             } else {
-               metric.streak -= 1;
+               //prevents streak from going below 0
+               metric.streak = Math.max(0, metric.streak - 1);
             }
          }
       }
@@ -80,7 +84,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          username: user.username,
          journeyType: "calorie tracking",
          date: today,
-         data: { valueLogged, details },
+         data: { numericLoggedValue, details },
       });
       await newLog.save();
 
