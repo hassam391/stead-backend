@@ -80,13 +80,15 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          username: user.username,
          journeyType: "calorie tracking",
          date: today,
-         data: { caloriesLogged, details },
+         data: { valueLogged, details },
       });
       await newLog.save();
 
       res.json({ message: "Log saved successfully", streak: metric.streak });
    } catch (err) {
       console.error("Log saving failed:", err);
+      //line to catch error for debugging
+      console.error(err.stack);
       res.status(500).json({ message: "Failed to save log" });
    }
 });
