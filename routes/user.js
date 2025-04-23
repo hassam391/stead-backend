@@ -120,6 +120,7 @@ router.post("/register", firebaseAuth, async (req, res) => {
    try {
       //checks if username already exists
       const existingUsername = await User.findOne({ username });
+
       if (existingUsername) {
          return res.status(409).json({ message: "Username already taken" });
       }
@@ -132,32 +133,19 @@ router.post("/register", firebaseAuth, async (req, res) => {
          user.username = username;
       }
 
-      await user.save();
-      res.status(200).json({ message: "User registered successfully" });
-   } catch (err) {
-      console.error("register error:", err);
-      res.status(500).json({ message: "server error" });
-   }
-});
-
-//---------- CODE BELOW HANDLES METRIC INIT ON FIRST SIGNUP ----------
-//creates user metrics upon sign up to avoid initial backend errors
-router.post("/signup", async (req, res) => {
-   try {
-      //creates user (existing code)
-      const user = await User.create({ email: req.body.email });
-
-      //initializes metrics document
+      //create associated metrics
       await Metric.create({
-         userId: user._id,
+         userId: newUser._id,
          streak: 0,
          lastLoggedDate: null,
          missedDays: [],
       });
 
-      res.status(201).json({ message: "User created" });
+      await user.save();
+      res.status(200).json({ message: "User registered successfully" });
    } catch (err) {
-      res.status(500).json({ message: "Signup failed" });
+      console.error("register error:", err);
+      res.status(500).json({ message: "server error" });
    }
 });
 
