@@ -41,8 +41,16 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       if (!user) return res.status(404).json({ message: "User not found" });
 
       let metric = await Metric.findOne({ userId: user._id });
+
+      //updated to include username
       if (!metric) {
-         metric = new Metric({ userId: user._id });
+         metric = new Metric({
+            userId: user._id,
+            username: user.username,
+            streak: 0,
+            lastLoggedDate: null,
+            missedDays: [],
+         });
       }
 
       //---------- DUPLICATE LOG PREVENTION ----------
