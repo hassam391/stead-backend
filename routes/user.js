@@ -139,7 +139,7 @@ router.post("/register", firebaseAuth, async (req, res) => {
       //creates associated metrics
       await Metric.create({
          userId: newUser._id,
-         username: user.username,
+         username: newUser.username,
          streak: 0,
          lastLoggedDate: null,
          missedDays: [],
