@@ -1,3 +1,4 @@
+//---------- CODE BELOW HANDLES IMPORTS ----------
 const express = require("express");
 const router = express.Router();
 const firebaseAuth = require("../middleware/firebaseAuth");
@@ -5,6 +6,7 @@ const User = require("../models/user");
 const Metric = require("../models/metrics");
 const Log = require("../models/log");
 
+//---------- CODE BELOW HANDLES GETTING USER METRICS ----------
 //get current streak + metrics
 router.get("/metrics", firebaseAuth, async (req, res) => {
    const email = req.user.email;
@@ -23,22 +25,10 @@ router.get("/metrics", firebaseAuth, async (req, res) => {
    }
 });
 
+//---------- CODE BELOW HANDLES ACTIVITY LOGGING + STREAK CALCULATION ----------
 //logs activity and update streak
 router.post("/log-activity", firebaseAuth, async (req, res) => {
-   //validation
-   if (!req.body.data) {
-      console.error("Missing data object in request:", req.body);
-      return res.status(400).json({ message: "Missing data object" });
-   }
-
    const { valueLogged, details } = req.body.data;
-
-   //validation
-   const numericLoggedValue = Number(valueLogged);
-   if (isNaN(numericLoggedValue)) {
-      console.error("Invalid valueLogged:", valueLogged);
-      return res.status(400).json({ message: "Calories must be a number" });
-   }
 
    //esnure value logged is a number
    numericLoggedValue = parseInt(valueLogged);
@@ -46,6 +36,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
    const today = new Date().toISOString().split("T")[0];
 
    try {
+      //---------- FETCH USER + INITIALISE METRIC ----------
       const user = await User.findOne({ email });
       if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -54,11 +45,13 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          metric = new Metric({ userId: user._id });
       }
 
+      //---------- DUPLICATE LOG PREVENTION ----------
       const existingLog = await Log.findOne({ userId: user._id.toString(), date: today });
       if (existingLog) {
          return res.status(400).json({ message: "Already logged today" });
       }
 
+      //---------- STREAK UPDATE LOGIC ----------
       let streakUpdated = false;
 
       //simple debugging code
@@ -67,6 +60,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       console.log("Logged:", numericLoggedValue);
       console.log("Streak before:", metric.streak);
 
+      //---------- STREAK OUTCOME CALCULATION LOGIC ----------
       if (user.goal === "lose weight" && numericLoggedValue <= user.calorieGoal + 100) {
          metric.streak += 1;
          streakUpdated = true;
@@ -82,8 +76,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          streakUpdated = true;
       }
 
-      //debug code
-      console.log("Streak after:", metric.streak);
+      //---------- PENALTY LOGIC: MISSED DAY ----------
 
       if (!streakUpdated) {
          const missedAlready = metric.missedDays.find((d) => new Date(d).toISOString().split("T")[0] === today);
@@ -100,6 +93,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          }
       }
 
+      //---------- SAVE METRIC + CREATE LOG ENTRY ----------
       metric.lastLoggedDate = today;
       await metric.save();
 
@@ -112,6 +106,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       });
       await newLog.save();
 
+      //---------- FINAL OUTCOME ----------
       res.json({ message: "Log saved successfully", streak: metric.streak });
    } catch (err) {
       console.error("Log saving failed:", err);

@@ -1,3 +1,4 @@
+//---------- CODE BELOW HANDLES IMPORTS ----------
 const express = require("express");
 const Log = require("../models/log");
 const User = require("../models/user");
@@ -5,6 +6,7 @@ const authMiddleware = require("../middleware/firebaseAuth");
 
 const router = express.Router();
 
+//---------- CODE BELOW HANDLES DAILY LOG CREATION ----------
 router.post("/", authMiddleware, async (req, res) => {
    const { journeyType, data } = req.body;
    const email = req.user.email;
@@ -40,7 +42,8 @@ router.post("/", authMiddleware, async (req, res) => {
    }
 });
 
-//checks whether user has lgged for the day or not
+//---------- CODE BELOW HANDLES LOGGING STATUS CHECK ----------
+//checks whether user has logged for the day or not
 router.get("/check", authMiddleware, async (req, res) => {
    const email = req.user.email;
    const today = new Date().toISOString().split("T")[0];

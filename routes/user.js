@@ -1,3 +1,4 @@
+//---------- CODE BELOW HANDLES IMPORTS ----------
 //imports express and the firebase auth middleware
 const express = require("express");
 const firebaseAuth = require("../middleware/firebaseAuth");
@@ -8,6 +9,7 @@ const Metric = require("../models/metrics");
 //creates a new router instance to define node routes separately
 const router = express.Router();
 
+//---------- CODE BELOW HANDLES PROTECTED ROUTE CHECK ----------
 //defines a protected route that needs a valid firebase token
 router.get("/protected", firebaseAuth, async (req, res) => {
    try {
@@ -24,6 +26,7 @@ router.get("/protected", firebaseAuth, async (req, res) => {
    }
 });
 
+//---------- CODE BELOW HANDLES DASHBOARD USER INFO ----------
 //gets user journey info to decide page redirection
 router.get("/info", firebaseAuth, async (req, res) => {
    try {
@@ -58,6 +61,7 @@ router.get("/info", firebaseAuth, async (req, res) => {
    }
 });
 
+//---------- CODE BELOW HANDLES SAVING USER JOURNEY ----------
 //saves user journey and frequency to database
 router.post("/journey", firebaseAuth, async (req, res) => {
    const { journey, frequency, goal, activity, calorieGoal } = req.body;
@@ -104,6 +108,7 @@ router.post("/journey", firebaseAuth, async (req, res) => {
    }
 });
 
+//---------- CODE BELOW HANDLES USERNAME REGISTRATION ----------
 //username registration
 router.post("/register", firebaseAuth, async (req, res) => {
    const { email, username } = req.body;
@@ -135,39 +140,14 @@ router.post("/register", firebaseAuth, async (req, res) => {
    }
 });
 
-//logs daily activity
-router.post("/log", firebaseAuth, async (req, res) => {
-   const { journey, details } = req.body;
-   const email = req.user.email;
-
-   //formats to YYYY-MM-DD
-   const today = new Date().toISOString().split("T")[0];
-
-   try {
-      //checks if log already exists for today
-      const existingLog = await Log.findOne({ email, date: today });
-      if (existingLog) {
-         return res.status(400).json({ message: "already logged today" });
-      }
-
-      //creates and saves new log
-      const newLog = new Log({ email, journey, date: today, details });
-      await newLog.save();
-
-      res.json({ message: "log saved successfully" });
-   } catch (err) {
-      console.error("log saving failed:", err);
-      res.status(500).json({ message: "failed to save log" });
-   }
-});
-
+//---------- CODE BELOW HANDLES METRIC INIT ON FIRST SIGNUP ----------
 //creates user metrics upon sign up to avoid initial backend errors
 router.post("/signup", async (req, res) => {
    try {
-      // 1. Create user (existing code)
+      //creates user (existing code)
       const user = await User.create({ email: req.body.email });
 
-      // 2. Initialize metrics document
+      //initializes metrics document
       await Metric.create({
          userId: user._id,
          streak: 0,
