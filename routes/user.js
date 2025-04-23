@@ -125,15 +125,18 @@ router.post("/register", firebaseAuth, async (req, res) => {
          return res.status(409).json({ message: "Username already taken" });
       }
 
-      //create or updates user
-      let user = await User.findOne({ email });
-      if (!user) {
-         user = new User({ email, username });
-      } else {
-         user.username = username;
+      //checks if user already exists
+      const existingUser = await User.findOne({ email });
+
+      if (existingUser) {
+         return res.status(400).json({ message: "Account already exists. Please log in instead." });
       }
 
-      //create associated metrics
+      //creates new user
+      const newUser = new User({ email, username });
+      await newUser.save();
+
+      //creates associated metrics
       await Metric.create({
          userId: newUser._id,
          streak: 0,
@@ -141,11 +144,10 @@ router.post("/register", firebaseAuth, async (req, res) => {
          missedDays: [],
       });
 
-      await user.save();
-      res.status(200).json({ message: "User registered successfully" });
+      res.status(201).json({ message: "User registered and metrics created successfully." });
    } catch (err) {
-      console.error("register error:", err);
-      res.status(500).json({ message: "server error" });
+      console.error("Register error:", err);
+      res.status(500).json({ message: "Server error during registration." });
    }
 });
 
