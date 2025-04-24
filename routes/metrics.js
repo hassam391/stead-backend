@@ -15,8 +15,54 @@ router.get("/metrics", firebaseAuth, async (req, res) => {
       const user = await User.findOne({ email });
       if (!user) return res.status(404).json({ message: "User not found" });
 
-      const metrics = await Metric.findOne({ userId: user._id });
-      if (!metrics) return res.status(404).json({ message: "Metrics not found" });
+      //attempts to find existing metrics for user
+      let metrics = await Metric.findOne({ userId: user._id });
+
+      //creates metrics if they don't exist
+      if (!metrics) {
+         metrics = new Metric({
+            userId: user._id,
+            username: user.username,
+            streak: 0,
+            missedDays: [],
+            lastLoggedDate: null,
+         });
+
+         //saves metrics
+         await metrics.save();
+      }
+
+      //converts last date logged to string
+      //skipped if there is no lastdatelogged (new user)
+      const lastDate = metrics.lastLoggedDate ? new Date(metrics.lastLoggedDate).toISOString().split("T")[0] : null;
+
+      //ensures lastloggeddate is not today, meaning today has not been logged yet
+      if (lastDate && lastDate !== today) {
+         //calculates yesterday's date in yyyymmdd format - done in ms
+         const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+
+         //checks if user has already missed yesterday or not - duplicate prevention
+         const missedAlready = metrics.missedDays.find((d) => new Date(d).toISOString().split("T")[0] === yesterday);
+
+         //checks to see if user actually logged yesterday - only those who forogt to log enitely will be penalised
+         const loggedYesterday = await Log.findOne({ userId: user._id.toString(), date: yesterday });
+
+         //if user did not log yesterday and its not already recorded, it gets recorded as missed
+         if (!loggedYesterday && !missedAlready) {
+            metrics.missedDays.push(yesterday);
+
+            //checks if used has missed 2 days now, resets streak if so
+            if (metrics.missedDays.length === 2) {
+               metrics.streak = 0;
+
+               //clears missed days
+               metrics.missedDays = [];
+            } else {
+               //-1 from streaks for 1 missed day, doesnt go below 0
+               metrics.streak = Math.max(0, metrics.streak - 1);
+            }
+         }
+      }
 
       res.json(metrics); //streak, missedDays, etc.
    } catch (err) {
@@ -82,23 +128,6 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       ) {
          metric.streak += 1;
          streakUpdated = true;
-      }
-
-      //---------- PENALTY LOGIC: MISSED DAY ----------
-
-      if (!streakUpdated) {
-         const missedAlready = metric.missedDays.find((d) => new Date(d).toISOString().split("T")[0] === today);
-
-         if (!missedAlready) {
-            metric.missedDays.push(today);
-
-            if (metric.missedDays.length === 2) {
-               metric.streak = 0;
-            } else {
-               //prevents streak from going below 0
-               metric.streak = Math.max(0, metric.streak - 1);
-            }
-         }
       }
 
       //---------- SAVE METRIC + CREATE LOG ENTRY ----------

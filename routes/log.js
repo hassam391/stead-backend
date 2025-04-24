@@ -11,6 +11,7 @@ router.post("/", authMiddleware, async (req, res) => {
    const { journeyType, data } = req.body;
    const email = req.user.email;
 
+   //simpler data format opposed to metrics for easy logging
    const today = new Date().toISOString().split("T")[0];
 
    try {
@@ -46,6 +47,8 @@ router.post("/", authMiddleware, async (req, res) => {
 //checks whether user has logged for the day or not
 router.get("/check", authMiddleware, async (req, res) => {
    const email = req.user.email;
+
+   //simpler data format opposed to metrics for easy logging
    const today = new Date().toISOString().split("T")[0];
 
    try {
