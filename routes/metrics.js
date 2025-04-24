@@ -33,6 +33,7 @@ router.get("/metrics", firebaseAuth, async (req, res) => {
          await metrics.save();
       }
 
+      //---------- CODE BELOW HANDLES PENALTY LOGIC ----------
       //converts last date logged to string
       //skipped if there is no lastdatelogged (new user)
       const lastDate = metrics.lastLoggedDate ? new Date(metrics.lastLoggedDate).toISOString().split("T")[0] : null;
@@ -109,26 +110,28 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       //---------- STREAK UPDATE LOGIC ----------
       let streakUpdated = false;
 
-      //simple debugging code
-      console.log("Goal:", user.goal);
-      console.log("Target:", user.calorieGoal);
-      console.log("Logged:", numericLoggedValue);
-      console.log("Streak before:", metric.streak);
-
       //---------- STREAK OUTCOME CALCULATION LOGIC ----------
-      if (user.goal === "lose weight" && numericLoggedValue <= user.calorieGoal + 100) {
-         metric.streak += 1;
-         streakUpdated = true;
-      } else if (user.goal === "gain weight" && numericLoggedValue >= user.calorieGoal - 200) {
-         metric.streak += 1;
-         streakUpdated = true;
-      } else if (
-         user.goal === "maintain weight" &&
-         numericLoggedValue >= user.calorieGoal - 200 &&
-         numericLoggedValue <= user.calorieGoal + 200
-      ) {
-         metric.streak += 1;
-         streakUpdated = true;
+      if (user.journey === "calorie tracking") {
+         if (user.goal === "lose weight" && numericLoggedValue <= user.calorieGoal + 100) {
+            metric.streak += 1;
+            streakUpdated = true;
+         } else if (user.goal === "gain weight" && numericLoggedValue >= user.calorieGoal - 200) {
+            metric.streak += 1;
+            streakUpdated = true;
+         } else if (
+            user.goal === "maintain weight" &&
+            numericLoggedValue >= user.calorieGoal - 200 &&
+            numericLoggedValue <= user.calorieGoal + 200
+         ) {
+            metric.streak += 1;
+            streakUpdated = true;
+         }
+      } else if (user.journey === "exercise" || user.journey === "other") {
+         //for exercise/activity, always increase streak if logging or checking in occurs
+         if (!isCheckIn || (isCheckIn && shouldCheckInToday(user))) {
+            metric.streak += 1;
+            streakUpdated = true;
+         }
       }
 
       //---------- SAVE METRIC + CREATE LOG ENTRY ----------
@@ -140,12 +143,16 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          username: user.username,
          journeyType: "calorie tracking",
          date: today,
+         isCheckIn: isCheckIn || false,
          data: { valueLogged: numericLoggedValue, details },
       });
       await newLog.save();
 
       //---------- FINAL OUTCOME ----------
-      res.json({ message: "Log saved successfully", streak: metric.streak });
+      res.json({
+         message: isCheckIn ? "Check-in saved" : "Log saved",
+         streak: metric.streak,
+      });
    } catch (err) {
       console.error("Log saving failed:", err);
       //line to catch error for debugging
