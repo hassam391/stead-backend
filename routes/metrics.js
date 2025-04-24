@@ -10,6 +10,7 @@ const Log = require("../models/log");
 //get current streak + metrics
 router.get("/metrics", firebaseAuth, async (req, res) => {
    const email = req.user.email;
+   const today = new Date().toISOString().split("T")[0];
 
    try {
       const user = await User.findOne({ email });
