@@ -77,6 +77,7 @@ router.get("/metrics", firebaseAuth, async (req, res) => {
 //logs activity and update streak
 router.post("/log-activity", firebaseAuth, async (req, res) => {
    const { valueLogged, details } = req.body.data;
+   const isCheckIn = req.body.data.isCheckIn || false;
 
    //esnure value logged is a number
    numericLoggedValue = parseInt(valueLogged);
@@ -141,7 +142,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       const newLog = new Log({
          userId: user._id.toString(),
          username: user.username,
-         journeyType: "calorie tracking",
+         journeyType: user.journey,
          date: today,
          isCheckIn: isCheckIn || false,
          data: { valueLogged: numericLoggedValue, details },
