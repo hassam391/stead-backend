@@ -8,6 +8,7 @@ const LogSchema = new mongoose.Schema({
    journeyType: { type: String, required: true },
    date: { type: String, required: true },
    data: { type: mongoose.Schema.Types.Mixed },
+   isCheckIn: { type: Boolean, default: false },
 });
 
 //exports the model

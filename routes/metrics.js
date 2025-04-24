@@ -76,8 +76,7 @@ router.get("/metrics", firebaseAuth, async (req, res) => {
 //---------- CODE BELOW HANDLES ACTIVITY LOGGING + STREAK CALCULATION ----------
 //logs activity and update streak
 router.post("/log-activity", firebaseAuth, async (req, res) => {
-   const { valueLogged, details } = req.body.data;
-   const isCheckIn = req.body.data.isCheckIn || false;
+   const { valueLogged, details, isCheckIn } = req.body.data;
 
    //esnure value logged is a number
    numericLoggedValue = parseInt(valueLogged);
@@ -129,7 +128,8 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          }
       } else if (user.journey === "exercise" || user.journey === "other") {
          //for exercise/activity, always increase streak if logging or checking in occurs
-         if (!isCheckIn || (isCheckIn && shouldCheckInToday(user))) {
+         if (!isCheckIn) {
+            //always increment streak for non-check-in logs
             metric.streak += 1;
             streakUpdated = true;
          }
