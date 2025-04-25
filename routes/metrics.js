@@ -156,6 +156,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          //for exercise/activity, always increase streak if logging or checking in occurs
          if (!isCheckIn) {
             //always increment streak for non-check-in logs
+            console.log("Check-in registered");
             metric.streak += 1;
             streakUpdated = true;
          }
@@ -176,16 +177,18 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       await newLog.save();
 
       //---------- FINAL OUTCOME ----------
-      res.json({
-         message: isCheckIn ? "Check-in saved" : "Log saved",
-         streak: metric.streak,
-      });
    } catch (err) {
       console.error("Log saving failed:", err);
       //line to catch error for debugging
       console.error(err.stack);
       res.status(500).json({ message: "Failed to save log" });
    }
+
+   //moved outside try block for better timings
+   res.json({
+      message: isCheckIn ? "Check-in saved" : "Log saved",
+      streak: metric.streak,
+   });
 });
 
 module.exports = router;
