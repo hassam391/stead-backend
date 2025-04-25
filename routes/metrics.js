@@ -109,12 +109,14 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
    const email = req.user.email;
    const today = new Date().toISOString().split("T")[0];
 
+   let metric;
+
    try {
       //---------- FETCH USER + INITIALISE METRIC ----------
       const user = await User.findOne({ email });
       if (!user) return res.status(404).json({ message: "User not found" });
 
-      let metric = await Metric.findOne({ userId: user._id });
+      metric = await Metric.findOne({ userId: user._id });
 
       //updated to include username
       if (!metric) {
