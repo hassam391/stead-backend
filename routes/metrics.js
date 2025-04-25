@@ -66,7 +66,27 @@ router.get("/metrics", firebaseAuth, async (req, res) => {
          }
       }
 
-      res.json(metrics); //streak, missedDays, etc.
+      // ---------- CHECKS WEEKLY LOG PROGRESS ----------
+      if (user.journey === "exercise" || user.journey === "other") {
+         const startOfWeek = new Date();
+         startOfWeek.setUTCHours(0, 0, 0, 0);
+         startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // set to Sunday
+
+         const logsThisWeek = await Log.find({
+            userId: user._id.toString(),
+            journeyType: user.journey,
+            isCheckIn: false,
+            date: { $gte: startOfWeek.toISOString().split("T")[0] },
+         });
+
+         const logCount = logsThisWeek.length;
+         metrics.hasMetWeeklyLogTarget = logCount >= user.frequency;
+      }
+
+      res.json({
+         ...metrics.toObject(),
+         hasMetWeeklyLogTarget: metrics.hasMetWeeklyLogTarget || false,
+      });
    } catch (err) {
       console.error("Error fetching metrics:", err);
       res.status(500).json({ message: "Server error" });
@@ -79,7 +99,13 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
    const { valueLogged, details, isCheckIn } = req.body.data;
 
    //esnure value logged is a number
-   numericLoggedValue = parseInt(valueLogged);
+   let numericLoggedValue = 0;
+   if (!isCheckIn) {
+      numericLoggedValue = parseInt(valueLogged);
+      if (isNaN(numericLoggedValue)) {
+         return res.status(400).json({ message: "Invalid value logged" });
+      }
+   }
    const email = req.user.email;
    const today = new Date().toISOString().split("T")[0];
 
