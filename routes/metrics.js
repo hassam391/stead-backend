@@ -29,6 +29,43 @@ router.get("/metrics", firebaseAuth, async (req, res) => {
             lastLoggedDate: null,
          });
 
+         //---------- CODE BELOW HANDLES EOW PENALTY AND NEW USER CHECK ----------
+         const todayCheck = new Date();
+         const dayOfWeek = todayCheck.getUTCDay();
+
+         if (dayOfWeek === 1) {
+            //if today is monday
+            const startOfLastWeek = new Date(todayCheck);
+
+            //go back to last Monday
+            startOfLastWeek.setUTCDate(todayCheck.getUTCDate() - todayCheck.getUTCDay() - 6);
+            startOfLastWeek.setUTCHours(0, 0, 0, 0);
+
+            const endOfLastWeek = new Date(startOfLastWeek);
+            endOfLastWeek.setUTCDate(startOfLastWeek.getUTCDate() + 6);
+
+            if (user.journey === "exercise" || user.journey === "other") {
+               const lastWeekLogs = await Log.find({
+                  userId: user._id.toString(),
+                  journeyType: user.journey,
+                  isCheckIn: false,
+                  date: {
+                     $gte: startOfLastWeek.toISOString().split("T")[0],
+                     $lte: endOfLastWeek.toISOString().split("T")[0],
+                  },
+               });
+
+               const metLastWeekTarget = lastWeekLogs.length >= user.frequency;
+
+               if (!metLastWeekTarget && user.joinedDate < startOfLastWeek) {
+                  //only penalise if user joined before last week
+                  metrics.streak = Math.max(0, metrics.streak - 2);
+                  await metrics.save();
+                  console.log(`Penalty applied: ${user.username} missed last week's frequency goal.`);
+               }
+            }
+         }
+
          //saves metrics
          await metrics.save();
       }

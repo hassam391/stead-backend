@@ -10,6 +10,7 @@ const UserSchema = new mongoose.Schema({
    goal: { type: String, default: null },
    activity: { type: String, default: null },
    calorieGoal: { type: Number, default: null },
+   joinedDate: { type: Date, default: Date.now },
 });
 
 module.exports = mongoose.model("User", UserSchema);
