@@ -77,22 +77,34 @@ router.post("/journey", firebaseAuth, async (req, res) => {
          user = new User({ email });
       }
 
-      //sets new journey and frequency
-      user.journey = journey;
-      user.frequency = frequency;
-
       //resets all journey-related fields to avoid nulls
       user.journey = journey;
-      user.frequency = frequency;
+      user.frequency = null;
       user.goal = null;
       user.activity = null;
       user.calorieGoal = null;
 
-      //assigns values only if they exist
-      if (typeof goal !== "undefined") user.goal = goal;
-      if (typeof activity !== "undefined") user.activity = activity;
-      if (typeof calorieGoal !== "undefined" && !isNaN(calorieGoal)) {
+      //new journey code to match new logic for exercise and other - plus some validation
+      if (journey === "calorie tracking") {
+         if (!goal || typeof calorieGoal !== "number") {
+            return res.status(400).json({ message: "Goal and calorieGoal are required for calorie tracking." });
+         }
+         user.goal = goal;
          user.calorieGoal = calorieGoal;
+         user.frequency = 7;
+      } else if (journey === "exercise") {
+         if (typeof frequency !== "number") {
+            return res.status(400).json({ message: "Frequency is required for exercise journey." });
+         }
+         user.frequency = frequency;
+      } else if (journey === "other") {
+         if (!activity || typeof frequency !== "number") {
+            return res.status(400).json({ message: "Activity name and frequency are required for 'other' journey." });
+         }
+         user.activity = activity;
+         user.frequency = frequency;
+      } else {
+         return res.status(400).json({ message: "Invalid journey type." });
       }
 
       //saves updated user data
@@ -100,7 +112,6 @@ router.post("/journey", firebaseAuth, async (req, res) => {
 
       //testing and validation
       console.log("received from frontend:", req.body);
-
       res.json({ message: "journey saved successfully" });
    } catch (err) {
       console.error("error saving journey:", err);

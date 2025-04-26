@@ -156,9 +156,10 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          }
       } else if (user.journey === "exercise" || user.journey === "other") {
          //for exercise/activity, always increase streak if logging or checking in occurs
-         if (!isCheckIn) {
+         if (isCheckIn) {
             //always increment streak for non-check-in logs
             console.log("Check-in registered");
+         } else {
             metric.streak += 1;
             streakUpdated = true;
          }
