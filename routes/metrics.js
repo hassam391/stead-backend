@@ -83,9 +83,26 @@ router.get("/metrics", firebaseAuth, async (req, res) => {
          metrics.hasMetWeeklyLogTarget = logCount >= user.frequency;
       }
 
+      // ---------- CHECK IF USER HAS LOGGED OR CHECKED IN TODAY ----------
+      const todayDate = new Date().toISOString().split("T")[0];
+      const todayLog = await Log.findOne({ userId: user._id.toString(), date: todayDate });
+
+      let loggedToday = false;
+      let checkedInToday = false;
+
+      if (todayLog) {
+         if (todayLog.isCheckIn) {
+            checkedInToday = true;
+         } else {
+            loggedToday = true;
+         }
+      }
+
       res.json({
          ...metrics.toObject(),
          hasMetWeeklyLogTarget: metrics.hasMetWeeklyLogTarget || false,
+         loggedToday,
+         checkedInToday,
       });
    } catch (err) {
       console.error("Error fetching metrics:", err);
@@ -156,13 +173,9 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          }
       } else if (user.journey === "exercise" || user.journey === "other") {
          //for exercise/activity, always increase streak if logging or checking in occurs
-         if (isCheckIn) {
-            //always increment streak for non-check-in logs
-            console.log("Check-in registered");
-         } else {
-            metric.streak += 1;
-            streakUpdated = true;
-         }
+         metric.streak += 1;
+         streakUpdated = true;
+         console.log(isCheckIn ? "Check-in registered" : "Log registered");
       }
 
       //---------- SAVE METRIC + CREATE LOG ENTRY ----------
