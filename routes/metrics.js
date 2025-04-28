@@ -229,6 +229,34 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       });
       await newLog.save();
 
+      //---------- CODE BELOW HANDLES REWARD UNLOCKING ----------
+
+      // fetch user again to safely unlock rewards
+      user = await User.findOne({ email });
+
+      //checks if user reached a special streak to unlock rewards or titles
+      if (streakUpdated) {
+         if ([1, 2, 3, 4, 5, 6, 7].includes(metric.streak)) {
+            //award title for first 7 days due to user testing only being 7 days
+            const title = `Day ${metric.streak} Achiever`;
+            if (!user.titlesUnlocked.includes(title)) {
+               user.titlesUnlocked.push(title);
+               user.newRewardAlert = true;
+               await user.save();
+               console.log(`New title unlocked: ${title}!`);
+            }
+         } else if (metric.streak % 7 === 0) {
+            //every 7th day after that gives a reward
+            const reward = `Week ${metric.streak / 7} Champion`;
+            if (!user.rewardsUnlocked.includes(reward)) {
+               user.rewardsUnlocked.push(reward);
+               user.newRewardAlert = true;
+               await user.save();
+               console.log(`New reward unlocked: ${reward}`);
+            }
+         }
+      }
+
       //---------- FINAL OUTCOME ----------
    } catch (err) {
       console.error("Log saving failed:", err);

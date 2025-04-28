@@ -8,6 +8,9 @@ const MetricsSchema = new mongoose.Schema({
    lastLoggedDate: { type: Date, default: Date.now }, //last logged date
    missedDays: { type: [Date], default: [] }, //list of missed days
    hasMetWeeklyLogTarget: { type: Boolean, default: false },
+   rewardsUnlocked: { type: [String], default: [] },
+   titlesUnlocked: { type: [String], default: [] },
+   newRewardAlert: { type: Boolean, default: false },
 });
 
 // Export the model
