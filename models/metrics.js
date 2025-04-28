@@ -7,7 +7,7 @@ const MetricsSchema = new mongoose.Schema({
    streak: { type: Number, default: 0 }, //current streak
    lastLoggedDate: { type: Date, default: Date.now }, //last logged date
    missedDays: { type: [Date], default: [] }, //list of missed days
-   hasMetWeeklyLogTarget: false,
+   hasMetWeeklyLogTarget: { type: Boolean, default: false },
 });
 
 // Export the model
