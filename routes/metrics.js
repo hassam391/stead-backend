@@ -5,6 +5,7 @@ const firebaseAuth = require("../middleware/firebaseAuth");
 const User = require("../models/user");
 const Metric = require("../models/metrics");
 const Log = require("../models/log");
+const metrics = require("../models/metrics");
 
 //---------- CODE BELOW HANDLES GETTING USER METRICS ----------
 //get current streak + metrics
@@ -239,18 +240,18 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          if ([1, 2, 3, 4, 5, 6, 7].includes(metric.streak)) {
             //award title for first 7 days due to user testing only being 7 days
             const title = `Day ${metric.streak} Achiever`;
-            if (!user.titlesUnlocked.includes(title)) {
-               user.titlesUnlocked.push(title);
-               user.newRewardAlert = true;
+            if (!metrics.titlesUnlocked.includes(title)) {
+               metrics.titlesUnlocked.push(title);
+               metrics.newRewardAlert = true;
                await user.save();
                console.log(`New title unlocked: ${title}!`);
             }
          } else if (metric.streak % 7 === 0) {
             //every 7th day after that gives a reward
             const reward = `Week ${metric.streak / 7} Champion`;
-            if (!user.rewardsUnlocked.includes(reward)) {
-               user.rewardsUnlocked.push(reward);
-               user.newRewardAlert = true;
+            if (!metrics.rewardsUnlocked.includes(reward)) {
+               metrics.rewardsUnlocked.push(reward);
+               metrics.newRewardAlert = true;
                await user.save();
                console.log(`New reward unlocked: ${reward}`);
             }
