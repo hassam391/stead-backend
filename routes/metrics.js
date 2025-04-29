@@ -210,7 +210,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
             streakUpdated = true;
          }
       } else if (user.journey === "exercise" || user.journey === "other") {
-         //for exercise/activity, always increase streak if logging or checking in occurs
+         //for exercise/activity, always increase streak if logging or checking in occurs!
          metric.streak += 1;
          streakUpdated = true;
          console.log(isCheckIn ? "Check-in registered" : "Log registered");
@@ -232,9 +232,6 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
 
       //---------- CODE BELOW HANDLES REWARD UNLOCKING ----------
 
-      // fetch user again to safely unlock rewards
-      user = await User.findOne({ email });
-
       //checks if user reached a special streak to unlock rewards or titles
       if (streakUpdated) {
          if ([1, 2, 3, 4, 5, 6, 7].includes(metric.streak)) {
@@ -243,7 +240,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
             if (!metrics.titlesUnlocked.includes(title)) {
                metrics.titlesUnlocked.push(title);
                metrics.newRewardAlert = true;
-               await user.save();
+               await metrics.save();
                console.log(`New title unlocked: ${title}!`);
             }
          } else if (metric.streak % 7 === 0) {
@@ -252,7 +249,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
             if (!metrics.rewardsUnlocked.includes(reward)) {
                metrics.rewardsUnlocked.push(reward);
                metrics.newRewardAlert = true;
-               await user.save();
+               await metrics.save();
                console.log(`New reward unlocked: ${reward}`);
             }
          }
