@@ -181,6 +181,9 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
             streak: 0,
             lastLoggedDate: null,
             missedDays: [],
+            rewardsUnlocked: [],
+            titlesUnlocked: [],
+            newRewardAlert: false,
          });
       }
 
