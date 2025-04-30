@@ -5,7 +5,6 @@ const firebaseAuth = require("../middleware/firebaseAuth");
 const User = require("../models/user");
 const Metric = require("../models/metrics");
 const Log = require("../models/log");
-const metrics = require("../models/metrics");
 
 //---------- CODE BELOW HANDLES GETTING USER METRICS ----------
 //get current streak + metrics
@@ -148,7 +147,7 @@ router.get("/metrics", firebaseAuth, async (req, res) => {
    }
 });
 
-//---------- CODE BELOW HANDLES ACTIVITY LOGGING + STREAK CALCULATION ----------
+// ---------- CODE BELOW HANDLES ACTIVITY LOGGING + STREAK CALCULATION ----------
 //logs activity and update streak
 router.post("/log-activity", firebaseAuth, async (req, res) => {
    const { valueLogged, details, isCheckIn } = req.body.data;
@@ -240,7 +239,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          if ([1, 2, 3, 4, 5, 6, 7].includes(metric.streak)) {
             //award title for first 7 days due to user testing only being 7 days
             const title = `Day ${metric.streak} Achiever`;
-            if (!metrics.titlesUnlocked.includes(title)) {
+            if (!metric.titlesUnlocked.includes(title)) {
                metrics.titlesUnlocked.push(title);
                metrics.newRewardAlert = true;
                await metrics.save();
@@ -249,7 +248,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          } else if (metric.streak % 7 === 0) {
             //every 7th day after that gives a reward
             const reward = `Week ${metric.streak / 7} Champion`;
-            if (!metrics.rewardsUnlocked.includes(reward)) {
+            if (!metric.rewardsUnlocked.includes(reward)) {
                metrics.rewardsUnlocked.push(reward);
                metrics.newRewardAlert = true;
                await metrics.save();
@@ -258,6 +257,12 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          }
       }
 
+      //moved outside try block for better timings
+      res.json({
+         message: isCheckIn ? "Check-in saved" : "Log saved",
+         streak: metric.streak,
+      });
+
       //---------- FINAL OUTCOME ----------
    } catch (err) {
       console.error("Log saving failed:", err);
@@ -265,12 +270,6 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       console.error(err.stack);
       res.status(500).json({ message: "Failed to save log" });
    }
-
-   //moved outside try block for better timings
-   res.json({
-      message: isCheckIn ? "Check-in saved" : "Log saved",
-      streak: metric.streak,
-   });
 });
 
 module.exports = router;
