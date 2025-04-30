@@ -242,7 +242,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
             if (!metric.titlesUnlocked.includes(title)) {
                metric.titlesUnlocked.push(title);
                metric.newRewardAlert = true;
-               await metrics.save();
+               await metric.save();
                console.log(`New title unlocked: ${title}!`);
             }
          } else if (metric.streak % 7 === 0) {
@@ -251,7 +251,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
             if (!metric.rewardsUnlocked.includes(reward)) {
                metric.rewardsUnlocked.push(reward);
                metric.newRewardAlert = true;
-               await metrics.save();
+               await metric.save();
                console.log(`New reward unlocked: ${reward}`);
             }
          }
