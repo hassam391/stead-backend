@@ -240,8 +240,8 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
             //award title for first 7 days due to user testing only being 7 days
             const title = `Day ${metric.streak} Achiever`;
             if (!metric.titlesUnlocked.includes(title)) {
-               metrics.titlesUnlocked.push(title);
-               metrics.newRewardAlert = true;
+               metric.titlesUnlocked.push(title);
+               metric.newRewardAlert = true;
                await metrics.save();
                console.log(`New title unlocked: ${title}!`);
             }
@@ -249,8 +249,8 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
             //every 7th day after that gives a reward
             const reward = `Week ${metric.streak / 7} Champion`;
             if (!metric.rewardsUnlocked.includes(reward)) {
-               metrics.rewardsUnlocked.push(reward);
-               metrics.newRewardAlert = true;
+               metric.rewardsUnlocked.push(reward);
+               metric.newRewardAlert = true;
                await metrics.save();
                console.log(`New reward unlocked: ${reward}`);
             }
