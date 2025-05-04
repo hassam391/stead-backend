@@ -235,29 +235,40 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       //---------- CODE BELOW HANDLES REWARD UNLOCKING ----------
 
       //checks if user reached a special streak to unlock rewards or titles
+      // Updated reward unlocking logic
       if (streakUpdated) {
-         if ([1, 2, 3, 4, 5, 6, 7].includes(metric.streak)) {
-            //award title for first 7 days due to user testing only being 7 days
-            const title = `Day ${metric.streak} Achiever`;
+         //awards titles for first 7 days
+         const titleMap = {
+            1: "Day 1: Beginner",
+            2: "Day 2: Fresh Starter",
+            3: "Day 3: Gaining Momentum",
+            4: "Day 4: Turning Point",
+            5: "Day 5: Getting there",
+            6: "Day 6: Hang of it",
+            7: "Day 7: Consistency King",
+         };
+
+         if (metric.streak <= 7) {
+            const title = titleMap[metric.streak];
             if (!metric.titlesUnlocked.includes(title)) {
                metric.titlesUnlocked.push(title);
                metric.newRewardAlert = true;
-               await metric.save();
-               console.log(`New title unlocked: ${title}!`);
             }
-         } else if (metric.streak % 7 === 0) {
-            //every 7th day after that gives a reward
-            const reward = `Week ${metric.streak / 7} Champion`;
+         }
+
+         if (metric.streak % 7 === 0) {
+            const reward = `day${Math.min(7, metric.streak)}`;
             if (!metric.rewardsUnlocked.includes(reward)) {
                metric.rewardsUnlocked.push(reward);
                metric.newRewardAlert = true;
-               await metric.save();
-               console.log(`New reward unlocked: ${reward}`);
             }
+         }
+
+         if (metric.newRewardAlert) {
+            await metric.save();
          }
       }
 
-      //moved outside try block for better timings
       res.json({
          message: isCheckIn ? "Check-in saved" : "Log saved",
          streak: metric.streak,
