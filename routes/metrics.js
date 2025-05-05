@@ -235,17 +235,21 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       //---------- CODE BELOW HANDLES REWARD UNLOCKING ----------
 
       //checks if user reached a special streak to unlock rewards or titles
-      // Updated reward unlocking logic
+      //updates reward unlocking logic
       if (streakUpdated) {
-         //awards titles for first 7 days
+         //initialize arrays if they don't exist
+         if (!metric.titlesUnlocked) metric.titlesUnlocked = [];
+         if (!metric.rewardsUnlocked) metric.rewardsUnlocked = [];
+
+         //title awards for first 7 days
          const titleMap = {
-            1: "Day 1: Beginner",
-            2: "Day 2: Fresh Starter",
-            3: "Day 3: Gaining Momentum",
-            4: "Day 4: Turning Point",
-            5: "Day 5: Getting there",
-            6: "Day 6: Hang of it",
-            7: "Day 7: Consistency King",
+            1: "Day 1 Achiever",
+            2: "Day 2 Achiever",
+            3: "Day 3 Achiever",
+            4: "Day 4 Achiever",
+            5: "Day 5 Achiever",
+            6: "Day 6 Achiever",
+            7: "Day 7 Achiever",
          };
 
          if (metric.streak <= 7) {
@@ -253,19 +257,23 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
             if (!metric.titlesUnlocked.includes(title)) {
                metric.titlesUnlocked.push(title);
                metric.newRewardAlert = true;
+               console.log(`Unlocked title: ${title}`);
             }
          }
 
-         if (metric.streak % 7 === 0) {
-            const reward = `day${Math.min(7, metric.streak)}`;
+         // Reward awards (every day for first 7 days)
+         if (metric.streak <= 7) {
+            const reward = `day${metric.streak}`;
             if (!metric.rewardsUnlocked.includes(reward)) {
                metric.rewardsUnlocked.push(reward);
                metric.newRewardAlert = true;
+               console.log(`Unlocked reward: ${reward}`);
             }
          }
 
          if (metric.newRewardAlert) {
             await metric.save();
+            console.log("Saved updated metrics with new unlocks");
          }
       }
 
