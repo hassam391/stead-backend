@@ -316,4 +316,34 @@ router.post("/rewards-seen", firebaseAuth, async (req, res) => {
    }
 });
 
+//---------- CODE BELOW HANDLES PROFILE TITLE ----------
+router.get("/user/info", firebaseAuth, async (req, res) => {
+   try {
+      const email = req.user.email;
+      const user = await User.findOne({ email });
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      const metric = await Metric.findOne({ userId: user._id });
+
+      let latestTitle = "titleless";
+      if (metric && Array.isArray(metric.titlesUnlocked) && metric.titlesUnlocked.length > 0) {
+         const sorted = metric.titlesUnlocked.sort((a, b) => {
+            const numA = parseInt(a.match(/\d+/));
+            const numB = parseInt(b.match(/\d+/));
+            return numB - numA;
+         });
+
+         latestTitle = sorted[0];
+      }
+
+      res.json({
+         username: user.username,
+         latestTitle,
+      });
+   } catch (err) {
+      console.error("User info fetch failed:", err);
+      res.status(500).json({ message: "Server error" });
+   }
+});
+
 module.exports = router;
