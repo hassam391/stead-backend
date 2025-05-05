@@ -280,6 +280,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       res.json({
          message: isCheckIn ? "Check-in saved" : "Log saved",
          streak: metric.streak,
+         newRewardAlert: metric.newRewardAlert || false,
       });
 
       //---------- FINAL OUTCOME ----------
