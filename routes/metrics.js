@@ -242,18 +242,18 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
          if (!metric.rewardsUnlocked) metric.rewardsUnlocked = [];
 
          //title awards for first 7 days
-         const titleMap = {
+         const titleNames = {
             1: "Day 1 Achiever",
-            2: "Day 2 Achiever",
-            3: "Day 3 Achiever",
-            4: "Day 4 Achiever",
-            5: "Day 5 Achiever",
-            6: "Day 6 Achiever",
-            7: "Day 7 Achiever",
+            2: "Day 2 Reacher",
+            3: "Day 3 Streaker",
+            4: "Day 4 Believer",
+            5: "Day 5 Climber",
+            6: "Day 6 Fighter",
+            7: "Day 7 Champion",
          };
 
          if (metric.streak <= 7) {
-            const title = titleMap[metric.streak];
+            const title = titleNames[metric.streak];
             if (!metric.titlesUnlocked.includes(title)) {
                metric.titlesUnlocked.push(title);
                metric.newRewardAlert = true;
@@ -288,6 +288,30 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       //line to catch error for debugging
       console.error(err.stack);
       res.status(500).json({ message: "Failed to save log" });
+   }
+});
+
+//---------- CODE BELOW HANDLES REWARDS PING ----------
+router.post("/rewards-seen", firebaseAuth, async (req, res) => {
+   try {
+      const email = req.user.email;
+      const user = await User.findOne({ email });
+
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      const metric = await Metric.findOne({ userId: user._id });
+      if (!metric) return res.status(404).json({ message: "Metrics not found" });
+
+      if (metric.newRewardAlert) {
+         metric.newRewardAlert = false;
+         await metric.save();
+         console.log(`cleared reward alert for ${user.username}`);
+      }
+
+      res.json({ success: true });
+   } catch (err) {
+      console.error("Error clearing reward alert:", err);
+      res.status(500).json({ message: "Server error" });
    }
 });
 
