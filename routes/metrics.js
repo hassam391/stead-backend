@@ -324,21 +324,29 @@ router.get("/user/info", firebaseAuth, async (req, res) => {
       if (!user) return res.status(404).json({ message: "User not found" });
 
       const metric = await Metric.findOne({ userId: user._id });
+      //default title
+      let latestTitle = "Titleless";
 
-      let latestTitle = "titleless";
-      if (metric && Array.isArray(metric.titlesUnlocked) && metric.titlesUnlocked.length > 0) {
-         const sorted = metric.titlesUnlocked.sort((a, b) => {
-            const numA = parseInt(a.match(/\d+/));
-            const numB = parseInt(b.match(/\d+/));
-            return numB - numA;
+      if (metric?.titlesUnlocked?.length > 0) {
+         //finds highest day number
+         const titleDayPairs = metric.titlesUnlocked.map((title) => {
+            const dayMatch = title.match(/Day (\d+)/);
+            return {
+               title,
+               day: dayMatch ? parseInt(dayMatch[1]) : 0,
+            };
          });
 
-         latestTitle = sorted[0];
+         //sorts descending by day number
+         titleDayPairs.sort((a, b) => b.day - a.day);
+
+         latestTitle = titleDayPairs[0].title;
       }
 
       res.json({
          username: user.username,
          latestTitle,
+         //includes other user data you need
       });
    } catch (err) {
       console.error("User info fetch failed:", err);
