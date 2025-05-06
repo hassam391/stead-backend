@@ -317,14 +317,47 @@ router.post("/rewards-seen", firebaseAuth, async (req, res) => {
 });
 
 //---------- CODE BELOW HANDLES PROFILE TITLE ----------
-router.get("/title-test", require("../middleware/firebaseAuth"), async (req, res) => {
-   console.log("/user/info route hit");
+router.get("title-test", firebaseAuth, async (req, res) => {
+   try {
+      const user = await User.findOne({ email: req.user.email });
+      const metric = (await Metric.findOne({ userId: user._id })) || {};
 
-   return res.json({
-      username: "test_user",
-      latestTitle: "Test Title 123",
-      titlesUnlocked: ["Test Title 1", "Test Title 2", "Test Title 123"],
-   });
+      // Default title
+      let displayTitle = "Titleless";
+
+      // Get all unlocked titles
+      const unlockedTitles = metric.titlesUnlocked || [];
+
+      // Find highest day title
+      if (unlockedTitles.length > 0) {
+         // Create array of {title, dayNumber} pairs
+         const titleDays = unlockedTitles.map((title) => {
+            const dayMatch = title.match(/Day\s*(\d+)/i);
+            return {
+               title,
+               day: dayMatch ? parseInt(dayMatch[1]) : 0,
+            };
+         });
+
+         // Sort by day number (highest first)
+         titleDays.sort((a, b) => b.day - a.day);
+
+         // Use the highest title
+         displayTitle = titleDays[0].title;
+      }
+
+      console.log("Fetched metric.titlesUnlocked:", metric.titlesUnlocked);
+      console.log("Resolved displayTitle:", displayTitle);
+
+      res.json({
+         username: user.username,
+         latestTitle: displayTitle,
+         titlesUnlocked: metric.titlesUnlocked || [],
+      });
+   } catch (err) {
+      console.error("User info fetch failed:", err);
+      res.status(500).json({ message: "Server error" });
+   }
 });
 
 module.exports = router;
