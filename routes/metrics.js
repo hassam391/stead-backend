@@ -332,7 +332,7 @@ router.get("/user/info", firebaseAuth, async (req, res) => {
       if (unlockedTitles.length > 0) {
          // Create array of {title, dayNumber} pairs
          const titleDays = unlockedTitles.map((title) => {
-            const dayMatch = title.match(/Day (\d+)/);
+            const dayMatch = title.match(/Day\s*(\d+)/i);
             return {
                title,
                day: dayMatch ? parseInt(dayMatch[1]) : 0,
