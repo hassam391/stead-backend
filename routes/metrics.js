@@ -319,17 +319,19 @@ router.post("/rewards-seen", firebaseAuth, async (req, res) => {
 //---------- CODE BELOW HANDLES PROFILE TITLE ----------
 router.get("/user/info", firebaseAuth, async (req, res) => {
    try {
-      const email = req.user.email;
-      const user = await User.findOne({ email });
-      if (!user) return res.status(404).json({ message: "User not found" });
+      const user = await User.findOne({ email: req.user.email });
+      const metric = (await Metric.findOne({ userId: user._id })) || {};
 
-      const metric = await Metric.findOne({ userId: user._id });
-      //default title
-      let latestTitle = "Titleless";
+      // Default title
+      let displayTitle = "Titleless";
 
-      if (metric?.titlesUnlocked?.length > 0) {
-         //finds highest day number
-         const titleDayPairs = metric.titlesUnlocked.map((title) => {
+      // Get all unlocked titles
+      const unlockedTitles = metric.titlesUnlocked || [];
+
+      // Find highest day title
+      if (unlockedTitles.length > 0) {
+         // Create array of {title, dayNumber} pairs
+         const titleDays = unlockedTitles.map((title) => {
             const dayMatch = title.match(/Day (\d+)/);
             return {
                title,
@@ -337,16 +339,17 @@ router.get("/user/info", firebaseAuth, async (req, res) => {
             };
          });
 
-         //sorts descending by day number
-         titleDayPairs.sort((a, b) => b.day - a.day);
+         // Sort by day number (highest first)
+         titleDays.sort((a, b) => b.day - a.day);
 
-         latestTitle = titleDayPairs[0].title;
+         // Use the highest title
+         displayTitle = titleDays[0].title;
       }
 
       res.json({
          username: user.username,
-         latestTitle,
-         //includes other user data you need
+         latestTitle: displayTitle,
+         // Include other needed data...
       });
    } catch (err) {
       console.error("User info fetch failed:", err);
