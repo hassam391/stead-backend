@@ -317,7 +317,7 @@ router.post("/rewards-seen", firebaseAuth, async (req, res) => {
 });
 
 //---------- CODE BELOW HANDLES PROFILE TITLE ----------
-router.get("title-test", firebaseAuth, async (req, res) => {
+router.get("/title-test", firebaseAuth, async (req, res) => {
    try {
       const user = await User.findOne({ email: req.user.email });
       const metric = (await Metric.findOne({ userId: user._id })) || {};
