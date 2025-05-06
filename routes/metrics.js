@@ -349,7 +349,7 @@ router.get("/user/info", firebaseAuth, async (req, res) => {
       res.json({
          username: user.username,
          latestTitle: displayTitle,
-         // Include other needed data...
+         titlesUnlocked: metric.titlesUnlocked || [],
       });
    } catch (err) {
       console.error("User info fetch failed:", err);
