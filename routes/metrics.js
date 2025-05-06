@@ -317,7 +317,7 @@ router.post("/rewards-seen", firebaseAuth, async (req, res) => {
 });
 
 //---------- CODE BELOW HANDLES PROFILE TITLE ----------
-router.get("/user/info", require("../middleware/firebaseAuth"), async (req, res) => {
+router.get("/title-test", require("../middleware/firebaseAuth"), async (req, res) => {
    console.log("/user/info route hit");
 
    return res.json({
