@@ -357,4 +357,17 @@ router.get("/title-display", firebaseAuth, async (req, res) => {
    }
 });
 
+//---------- CODE BELOW FETCHES LOGS FOR RECENT ACTIVITY ----------
+router.get("/recent-logs", firebaseAuth, async (req, res) => {
+   try {
+      const user = await User.findOne({ email: req.user.email });
+      const logs = await Log.find({ userId: user._id.toString() }).sort({ date: -1 }).limit(5);
+
+      res.json(logs);
+   } catch (err) {
+      console.error("Failed to fetch recent logs:", err);
+      res.status(500).json({ message: "Server error" });
+   }
+});
+
 module.exports = router;
