@@ -317,20 +317,20 @@ router.post("/rewards-seen", firebaseAuth, async (req, res) => {
 });
 
 //---------- CODE BELOW HANDLES PROFILE TITLE ----------
-router.get("/title-test", firebaseAuth, async (req, res) => {
+router.get("/title-display", firebaseAuth, async (req, res) => {
    try {
       const user = await User.findOne({ email: req.user.email });
       const metric = (await Metric.findOne({ userId: user._id })) || {};
 
-      // Default title
+      //defaults title
       let displayTitle = "Titleless";
 
-      // Get all unlocked titles
+      //gets all unlocked titles
       const unlockedTitles = metric.titlesUnlocked || [];
 
-      // Find highest day title
+      //finds highest day title
       if (unlockedTitles.length > 0) {
-         // Create array of {title, dayNumber} pairs
+         //creates array of {title, dayNumber} pairs
          const titleDays = unlockedTitles.map((title) => {
             const dayMatch = title.match(/Day\s*(\d+)/i);
             return {
@@ -339,15 +339,12 @@ router.get("/title-test", firebaseAuth, async (req, res) => {
             };
          });
 
-         // Sort by day number (highest first)
+         //sort by day number (highest first)
          titleDays.sort((a, b) => b.day - a.day);
 
-         // Use the highest title
+         //uses the highest title
          displayTitle = titleDays[0].title;
       }
-
-      console.log("Fetched metric.titlesUnlocked:", metric.titlesUnlocked);
-      console.log("Resolved displayTitle:", displayTitle);
 
       res.json({
          username: user.username,
