@@ -317,12 +317,13 @@ router.post("/rewards-seen", firebaseAuth, async (req, res) => {
 });
 
 //---------- CODE BELOW HANDLES PROFILE TITLE ----------
-router.get("/user/info", firebaseAuth, async (req, res) => {
-   console.log("/user/info route was hit");
+router.get("/user/info", require("../middleware/firebaseAuth"), async (req, res) => {
+   console.log("/user/info route hit");
+
    return res.json({
-      username: "hassam123",
-      latestTitle: "Day 6 Fighter",
-      titlesUnlocked: ["Day 1 Achiever", "Day 2 Reacher", "Day 6 Fighter"],
+      username: "test_user",
+      latestTitle: "Test Title 123",
+      titlesUnlocked: ["Test Title 1", "Test Title 2", "Test Title 123"],
    });
 });
 
