@@ -346,6 +346,9 @@ router.get("/user/info", firebaseAuth, async (req, res) => {
          displayTitle = titleDays[0].title;
       }
 
+      console.log("Fetched metric.titlesUnlocked:", metric.titlesUnlocked);
+      console.log("Resolved displayTitle:", displayTitle);
+
       res.json({
          username: user.username,
          latestTitle: displayTitle,
