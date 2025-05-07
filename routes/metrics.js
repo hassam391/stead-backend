@@ -409,7 +409,9 @@ router.get("/leaderboard", async (req, res) => {
                   return { reward, day: match ? parseInt(match[1]) : 0 };
                })
                .sort((a, b) => b.day - a.day);
-            highestReward = sortedRewards[0].reward;
+
+            const lastRewardNum = sortedRewards[0].day;
+            highestReward = lastRewardNum ? `day_${lastRewardNum}` : null;
          }
 
          return {
