@@ -370,4 +370,64 @@ router.get("/recent-logs", firebaseAuth, async (req, res) => {
    }
 });
 
+//---------- CODE BELOW HANDLES ALL LEADERBOARD LOGIC ----------
+router.get("/leaderboard", async (req, res) => {
+   try {
+      //fetchs all users and metrics
+      const users = await User.find({});
+      const metrics = await Metric.find({});
+
+      //creates a map of userId to username
+      const userMap = {};
+      users.forEach((user) => {
+         userMap[user._id.toString()] = user.username;
+      });
+
+      //builds leaderboard entries
+      const leaderboard = metrics.map((metric) => {
+         const titles = metric.titlesUnlocked || [];
+         const rewards = metric.rewardsUnlocked || [];
+
+         //gets highest title based on day number
+         let latestTitle = "Titleless";
+         if (titles.length > 0) {
+            const sortedTitles = titles
+               .map((title) => {
+                  const match = title.match(/Day\s*(\d+)/i);
+                  return { title, day: match ? parseInt(match[1]) : 0 };
+               })
+               .sort((a, b) => b.day - a.day);
+            latestTitle = sortedTitles[0].title;
+         }
+
+         //gets highest reward based on day number
+         let highestReward = null;
+         if (rewards.length > 0) {
+            const sortedRewards = rewards
+               .map((reward) => {
+                  const match = reward.match(/day(\d+)/i);
+                  return { reward, day: match ? parseInt(match[1]) : 0 };
+               })
+               .sort((a, b) => b.day - a.day);
+            highestReward = sortedRewards[0].reward;
+         }
+
+         return {
+            username: userMap[metric.userId.toString()] || "Unknown",
+            streak: metric.streak || 0,
+            latestTitle,
+            highestReward,
+         };
+      });
+
+      //sorts by streak descending
+      leaderboard.sort((a, b) => b.streak - a.streak);
+
+      res.json(leaderboard);
+   } catch (err) {
+      console.error("Failed to build leaderboard:", err);
+      res.status(500).json({ message: "Server error" });
+   }
+});
+
 module.exports = router;
