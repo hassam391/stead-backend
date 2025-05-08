@@ -323,7 +323,7 @@ router.get("/title-display", firebaseAuth, async (req, res) => {
       const metric = (await Metric.findOne({ userId: user._id })) || {};
 
       //defaults title
-      let displayTitle = "Titleless";
+      let displayTitle = "Beginner";
 
       //gets all unlocked titles
       const unlockedTitles = metric.titlesUnlocked || [];
@@ -389,7 +389,7 @@ router.get("/leaderboard", async (req, res) => {
          const rewards = metric.rewardsUnlocked || [];
 
          //gets highest title based on day number
-         let latestTitle = "Titleless";
+         let latestTitle = "Beginner";
          if (titles.length > 0) {
             const sortedTitles = titles
                .map((title) => {
