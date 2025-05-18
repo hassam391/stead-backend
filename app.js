@@ -13,10 +13,16 @@ const app = express();
 app.use(
    cors({
       origin: [
+         //live server
+         "http://127.0.0.1:5500",
+
+         //alternative live server
+         "http://localhost:5500",
+
          //deployed frontend
          "https://stead-app.netlify.app",
       ],
-      methods: ["GET", "POST"],
+      methods: ["GET", "POST", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
    })
 );

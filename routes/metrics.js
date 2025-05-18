@@ -29,47 +29,6 @@ router.get("/metrics", firebaseAuth, async (req, res) => {
             lastLoggedDate: null,
          });
 
-         //---------- CODE BELOW HANDLES EOW PENALTY AND NEW USER CHECK ----------
-         //applies weekly penalty if user missed frequency goal last week
-
-         const todayCheck = new Date();
-         const dayOfWeek = todayCheck.getUTCDay();
-
-         if (dayOfWeek === 1) {
-            //if today is monday
-            //checks if today is Monday 0=sunday 1=monday
-            const startOfLastWeek = new Date(todayCheck);
-
-            //go back to last Monday
-            startOfLastWeek.setUTCDate(todayCheck.getUTCDate() - todayCheck.getUTCDay() - 6);
-            startOfLastWeek.setUTCHours(0, 0, 0, 0);
-
-            //calculates last week's Monday date
-            const endOfLastWeek = new Date(startOfLastWeek);
-            endOfLastWeek.setUTCDate(startOfLastWeek.getUTCDate() + 6);
-
-            if (user.journey === "exercise" || user.journey === "other") {
-               const lastWeekLogs = await Log.find({
-                  userId: user._id.toString(),
-                  journeyType: user.journey,
-                  isCheckIn: false,
-                  date: {
-                     $gte: startOfLastWeek.toISOString().split("T")[0],
-                     $lte: endOfLastWeek.toISOString().split("T")[0],
-                  },
-               });
-
-               const metLastWeekTarget = lastWeekLogs.length >= user.frequency;
-
-               if (!metLastWeekTarget && user.joinedDate < startOfLastWeek) {
-                  //only penalise if user joined before last week
-                  metrics.streak = Math.max(0, metrics.streak - 2);
-                  await metrics.save();
-                  console.log(`Penalty applied: ${user.username} missed last week's frequency goal.`);
-               }
-            }
-         }
-
          //saves metrics
          await metrics.save();
       }
@@ -95,16 +54,8 @@ router.get("/metrics", firebaseAuth, async (req, res) => {
          if (!loggedYesterday && !missedAlready) {
             metrics.missedDays.push(yesterday);
 
-            //checks if used has missed 2 days now, resets streak if so
-            if (metrics.missedDays.length === 2) {
-               metrics.streak = 0;
-
-               //clears missed days
-               metrics.missedDays = [];
-            } else {
-               //-1 from streaks for 1 missed day, doesnt go below 0
-               metrics.streak = Math.max(0, metrics.streak - 1);
-            }
+            //-1 from streak for missing yesterday, doesn't go below 0
+            metrics.streak = Math.max(0, metrics.streak - 1);
          }
       }
 
@@ -311,7 +262,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
       });
 
       //---------- FINAL OUTCOME ----------
-      //logs error
+      //catches and handles any logging errors
    } catch (err) {
       console.error("Log saving failed:", err);
       //line to catch error for debugging
@@ -339,6 +290,8 @@ router.post("/rewards-seen", firebaseAuth, async (req, res) => {
 
       //sends success response to confirm alert was cleared
       res.json({ success: true });
+
+      //catches and handles any logging errors
    } catch (err) {
       console.error("Error clearing reward alert:", err);
       res.status(500).json({ message: "Server error" });
@@ -381,6 +334,7 @@ router.get("/title-display", firebaseAuth, async (req, res) => {
          latestTitle: displayTitle,
          titlesUnlocked: metric.titlesUnlocked || [],
       });
+      //catches and handles any logging errors
    } catch (err) {
       console.error("User info fetch failed:", err);
       res.status(500).json({ message: "Server error" });
@@ -397,6 +351,8 @@ router.get("/recent-logs", firebaseAuth, async (req, res) => {
 
       //sends logs to frontend
       res.json(logs);
+
+      //catches and handles any logging errors
    } catch (err) {
       console.error("Failed to fetch recent logs:", err);
       res.status(500).json({ message: "Server error" });
@@ -464,6 +420,8 @@ router.get("/leaderboard", async (req, res) => {
 
       //sends formatted leaderboard data to frontend
       res.json(leaderboard);
+
+      //catches and handles any logging errors
    } catch (err) {
       console.error("Failed to build leaderboard:", err);
       res.status(500).json({ message: "Server error" });

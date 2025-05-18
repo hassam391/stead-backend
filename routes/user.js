@@ -21,6 +21,8 @@ router.get("/protected", firebaseAuth, async (req, res) => {
       }
       //sends back a response showing the user is authenticated
       res.json({ message: `Hello ${req.user.email}, you are authenticated!` });
+
+      //catches and handles any logging errors
    } catch {
       res.status(500).json({ message: "server error" });
    }
@@ -55,6 +57,8 @@ router.get("/info", firebaseAuth, async (req, res) => {
          calorieGoal: user.calorieGoal,
          currentStreak: user.currentStreak, //to display on dashbaord
       });
+
+      //catches and handles any logging errors
    } catch (err) {
       console.error("GET /info error:", err);
       res.status(500).json({ message: "server error" });
@@ -113,6 +117,8 @@ router.post("/journey", firebaseAuth, async (req, res) => {
       //testing and validation
       console.log("received from frontend:", req.body);
       res.json({ message: "journey saved successfully" });
+
+      //catches and handles any logging errors
    } catch (err) {
       console.error("error saving journey:", err);
       res.status(500).json({ message: "failed to save journey" });
@@ -157,6 +163,8 @@ router.post("/register", firebaseAuth, async (req, res) => {
       });
 
       res.status(201).json({ message: "User registered and metrics created successfully." });
+
+      //catches and handles any logging errors
    } catch (err) {
       console.error("Register error:", err);
       res.status(500).json({ message: "Server error during registration." });
