@@ -28,6 +28,9 @@ router.get("/metrics", firebaseAuth, async (req, res) => {
             missedDays: [],
             lastLoggedDate: null,
          });
+
+         //saves metrics
+         await metrics.save();
       }
 
       //---------- CODE BELOW HANDLES PENALTY LOGIC ----------
@@ -146,9 +149,6 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
             titlesUnlocked: [],
             newRewardAlert: false,
          });
-
-         //saves metrics
-         await metric.save();
       }
 
       //---------- DUPLICATE LOG PREVENTION ----------
@@ -212,8 +212,8 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
 
       if (streakUpdated) {
          //initialize arrays if they don't exist
-         metric.titlesUnlocked = [...new Set(metric.titlesUnlocked)];
-         metric.rewardsUnlocked = [...new Set(metric.rewardsUnlocked)];
+         if (!metric.titlesUnlocked) metric.titlesUnlocked = [];
+         if (!metric.rewardsUnlocked) metric.rewardsUnlocked = [];
 
          //title awards for first 7 days
          const titleNames = {
@@ -233,6 +233,7 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
                metric.titlesUnlocked.push(title);
                //pings new reward alert to show on frontend
                metric.newRewardAlert = true;
+               console.log(`Unlocked title: ${title}`);
             }
          }
 
@@ -242,7 +243,13 @@ router.post("/log-activity", firebaseAuth, async (req, res) => {
             if (!metric.rewardsUnlocked.includes(reward)) {
                metric.rewardsUnlocked.push(reward);
                metric.newRewardAlert = true;
+               console.log(`Unlocked reward: ${reward}`);
             }
+         }
+
+         if (metric.newRewardAlert) {
+            await metric.save();
+            console.log("Saved updated metrics with new unlocks");
          }
       }
 
