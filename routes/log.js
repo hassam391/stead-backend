@@ -7,6 +7,8 @@ const authMiddleware = require("../middleware/firebaseAuth");
 const router = express.Router();
 
 //---------- CODE BELOW HANDLES DAILY LOG CREATION ----------
+
+//creates a new daily log entry for the current user
 router.post("/", authMiddleware, async (req, res) => {
    const { journeyType, data } = req.body;
    const email = req.user.email;
@@ -15,18 +17,19 @@ router.post("/", authMiddleware, async (req, res) => {
    const today = new Date().toISOString().split("T")[0];
 
    try {
-      const user = await User.findOne({ email });
       //user validation
+      const user = await User.findOne({ email });
       if (!user) {
          return res.status(400).json({ message: "User not found" });
       }
 
-      //to avoid double logging
+      //validation to avoid double logging
       const existing = await Log.findOne({ userId: user._id.toString(), date: today });
       if (existing) {
          return res.status(400).json({ message: "You've already logged today!" });
       }
 
+      //builds and saves new log document
       const newLog = new Log({
          userId: user._id.toString(),
          username: user.username,
@@ -35,6 +38,7 @@ router.post("/", authMiddleware, async (req, res) => {
          data,
       });
 
+      //catches and handles any logging errors
       await newLog.save();
       res.status(201).json({ message: "Log saved successfully!" });
    } catch (err) {
@@ -58,6 +62,7 @@ router.get("/check", authMiddleware, async (req, res) => {
          return res.status(404).json({ message: "User not found" });
       }
 
+      //catches and handles log status check errors
       const existingLog = await Log.findOne({ userId: user._id.toString(), date: today });
       res.json({ loggedToday: !!existingLog });
    } catch (err) {

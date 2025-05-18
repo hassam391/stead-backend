@@ -1,3 +1,4 @@
+//gets mongoose to define the metrcis schema
 const mongoose = require("mongoose");
 
 // Define the Metrics schema
@@ -13,5 +14,5 @@ const MetricsSchema = new mongoose.Schema({
    newRewardAlert: { type: Boolean, default: false },
 });
 
-// Export the model
+//exports the model
 module.exports = mongoose.model("Metric", MetricsSchema);

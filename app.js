@@ -9,13 +9,10 @@ require("dotenv").config();
 //initializes the express app
 const app = express();
 
-//allows testing with local live server
+//for testing with both local and deployed server
 app.use(
    cors({
       origin: [
-         //local live server
-         "http://127.0.0.1:5500",
-
          //deployed frontend
          "https://stead-app.netlify.app",
       ],
@@ -27,15 +24,15 @@ app.use(
 //uses middleware to handle cross-origin requests and parse incoming json
 app.use(express.json());
 
-//registers all user-related routes
+//registers all user related routes
 const userRoutes = require("./routes/user");
 app.use("/api/user", userRoutes);
 
-//registers all log-related routes
+//registers all log related routes
 const logRoutes = require("./routes/log");
 app.use("/api/log", logRoutes);
 
-//registers all metric-related routes
+//registers all metric related routes
 const metricsRoutes = require("./routes/metrics");
 app.use("/api", metricsRoutes);
 
