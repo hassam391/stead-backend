@@ -35,7 +35,6 @@ router.get("/metrics", firebaseAuth, async (req, res) => {
 
       //---------- CODE BELOW HANDLES PENALTY LOGIC ----------
       //converts last date logged to string
-      //skips if user has never logged before
       //only applies penalty if user did not log yesterday and hasnt already been penalised
       const lastDate = metrics.lastLoggedDate ? new Date(metrics.lastLoggedDate).toISOString().split("T")[0] : null;
 
@@ -314,6 +313,7 @@ router.get("/title-display", firebaseAuth, async (req, res) => {
       if (unlockedTitles.length > 0) {
          //creates array of title and dayNumber pairs
          const titleDays = unlockedTitles.map((title) => {
+            //regex gets number after word 'day' is case sensitive
             const dayMatch = title.match(/Day\s*(\d+)/i);
             return {
                title,
@@ -384,6 +384,7 @@ router.get("/leaderboard", async (req, res) => {
          if (titles.length > 0) {
             const sortedTitles = titles
                .map((title) => {
+                  //regex matches 'day' with optional spaces and number
                   const match = title.match(/Day\s*(\d+)/i);
                   return { title, day: match ? parseInt(match[1]) : 0 };
                })
@@ -398,6 +399,7 @@ router.get("/leaderboard", async (req, res) => {
          if (rewards.length > 0) {
             const sortedRewards = rewards
                .map((reward) => {
+                  //regex gets day with no spaces and is case sensitive
                   const match = reward.match(/day(\d+)/i);
                   return { reward, day: match ? parseInt(match[1]) : 0 };
                })
